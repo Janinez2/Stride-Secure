@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "BleControl",
+    "slug": "BleControl",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true, 
+      "bunleIdentifier": "com.example.blecontrol"
+    },
+    "android": {
+      "package": "com.example.blecontrol",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "react-native-ble-plx",
+        {
+          "bluetoothAlwaysPermission": "Allow BleControl to connect to your device over Bluetooth."
+        }
+      ]
+    ]
+  }
+}
