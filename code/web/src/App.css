@@ -203,6 +203,10 @@ button:not(:disabled):hover {
   padding: 20px;
 }
 
+.tilt-status-card {
+  grid-column: 1 / -1;
+}
+
 .sensor-label {
   display: block;
   color: #728093;

@@ -251,7 +251,7 @@ function App() {
               </div>
             </div>
 
-            <div className="sensor-card">
+            <div className="sensor-card tilt-status-card">
               <span className="sensor-label">
                 Tilt Status
               </span>

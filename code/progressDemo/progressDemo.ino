@@ -78,6 +78,8 @@ float proxData(){
       int rate = map((int)distance, 40, 200, 500, 10);  // from range of 40cm-200cm, respectively flash at a rate of 500ms-10ms intervals
       rate = constrain(rate, 10, 500);
 
+      digitalWrite(distPin, LOW);
+      delay(rate);
       digitalWrite(distPin, HIGH);
       delay(rate);
       digitalWrite(distPin, LOW);
