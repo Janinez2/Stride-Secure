@@ -113,9 +113,9 @@ const char* imuData(){
   } else if (y < minusThreshold) {
     status = "Too forward";
   } else if (x < minusThreshold) {
-    status = "Too left";
-  } else if (x > plusThreshold) {
     status = "Too right";
+  } else if (x > plusThreshold) {
+    status = "Too left";
   }
 
   if (y > plusThreshold || y < minusThreshold ||
