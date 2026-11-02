@@ -14,8 +14,9 @@ export const TELEMETRY_UUID =
 // Sensor data received from Arduino.
 export interface Telemetry {
   distance_cm: number;
-  dist_raw: number;
-  tilt_raw: number;
+  average_cm: number;
+  tilt_status: string;
+  over40_count: number;
 }
 
 let device: BluetoothDevice | null = null;
@@ -94,8 +95,9 @@ export async function connectToArduino(
 
         if (
           typeof data.distance_cm !== "number" ||
-          typeof data.dist_raw !== "number" ||
-          typeof data.tilt_raw !== "number"
+          typeof data.average_cm !== "number" ||
+          typeof data.tilt_status !== "string" ||
+          typeof data.over40_count !== "number"
         ) {
           throw new Error("Invalid telemetry format.");
         }

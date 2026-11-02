@@ -226,26 +226,12 @@ function App() {
 
             <div className="sensor-card">
               <span className="sensor-label">
-                Distance Sensor
+                Tilt Status
               </span>
 
               <div className="sensor-value">
-                {telemetry?.dist_raw ?? "--"}
+                {telemetry?.tilt_status ?? "--"}
               </div>
-
-              <span className="sensor-unit">Raw ADC</span>
-            </div>
-
-            <div className="sensor-card">
-              <span className="sensor-label">
-                Tilt Sensor
-              </span>
-
-              <div className="sensor-value">
-                {telemetry?.tilt_raw ?? "--"}
-              </div>
-
-              <span className="sensor-unit">Raw ADC</span>
             </div>
           </div>
 
