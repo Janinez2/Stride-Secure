@@ -97,6 +97,7 @@ function App() {
   };
 
   const distance = telemetry?.distance_cm;
+  const averageDistance = telemetry?.average_cm;
 
   return (
     <div className="app">
@@ -222,6 +223,32 @@ function App() {
               </div>
 
               <span className="sensor-unit">cm</span>
+            </div>
+
+            <div className="sensor-card">
+              <span className="sensor-label">
+                Average Distance
+              </span>
+
+              <div className="sensor-value">
+                {averageDistance === undefined
+                  ? "--"
+                  : averageDistance < 0
+                  ? "N/A"
+                  : averageDistance.toFixed(1)}
+              </div>
+
+              <span className="sensor-unit">cm</span>
+            </div>
+
+            <div className="sensor-card">
+              <span className="sensor-label">
+                Distance Past Threshold Count
+              </span>
+
+              <div className="sensor-value">
+                {telemetry?.over40_count ?? "--"}
+              </div>
             </div>
 
             <div className="sensor-card">
