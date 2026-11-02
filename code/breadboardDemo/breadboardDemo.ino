@@ -1,7 +1,7 @@
 
-const int trigPin = A1;
-const int echoPin = A0;
-const int ledPin = A8;
+const int trigPin = A1; //used to be A1
+const int echoPin = A0; //used to be A0
+const int ledPin = A7; //used to be A8
 
 void setup() {
   Serial.begin(9600);

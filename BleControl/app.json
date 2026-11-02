@@ -1,24 +1,26 @@
 {
   "expo": {
-    "name": "BleControl",
-    "slug": "BleControl",
+    "name": "Stride Secure",
+    "slug": "stride-secure",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true, 
-      "bunleIdentifier": "com.example.blecontrol"
+      "bundleIdentifier": "com.stridesecure.app",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "Stride Secure uses Bluetooth to communicate with your device.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.example.blecontrol",
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false
+      "package": "com.stridesecure.app",
+      "permissions": [
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -27,9 +29,17 @@
       [
         "react-native-ble-plx",
         {
+          "isBackgroundEnabled": false,
+          "modes": [],
           "bluetoothAlwaysPermission": "Allow BleControl to connect to your device over Bluetooth."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5eca0d4f-e991-4c4e-bc18-e416d64f54b7"
+      }
+    },
+    "owner": "stride-secure"
   }
 }

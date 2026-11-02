@@ -1,0 +1,268 @@
+
+/* src/App.css */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f3f5f8;
+  color: #202938;
+}
+
+button {
+  font-family: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: #142b45;
+  color: white;
+  padding: 25px 7%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: 2px;
+}
+
+.header p {
+  margin: 6px 0 0;
+  color: #bdcbd9;
+  font-size: 14px;
+}
+
+.connection-indicator {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #999;
+}
+
+.online .status-dot {
+  background: #38c98b;
+}
+
+.offline .status-dot {
+  background: #e58b8b;
+}
+
+.dashboard {
+  width: min(100% - 40px, 1050px);
+  margin: 35px auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  flex: 1;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 3px 12px rgba(20, 43, 69, 0.06);
+}
+
+.connection-card {
+  grid-column: span 2;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 12px;
+  color: #28557f;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 19px;
+  color: #28557f;
+}
+
+.description {
+  color: #738092;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.device-icon {
+  background: #e7eff8;
+  color: #28557f;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.device-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 13px 0;
+  border-bottom: 1px solid #edf0f3;
+  font-size: 14px;
+}
+
+.label {
+  color: #788596;
+}
+
+.device-info strong {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+button {
+  border: none;
+  border-radius: 7px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button:not(:disabled):hover {
+  opacity: 0.85;
+}
+
+.primary-button {
+  background: #24649c;
+  color: white;
+  margin-top: 18px;
+}
+
+.secondary-button {
+  background: #e8eef5;
+  color: #244563;
+  margin-top: 18px;
+}
+
+.disconnect-button {
+  background: #fceaea;
+  color: #a63232;
+  margin-top: 18px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sensor-section {
+  grid-column: span 2;
+}
+
+.live-label {
+  background: #e3f7ed;
+  color: #168653;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  margin-top: 22px;
+}
+
+.sensor-card {
+  background: #f5f7fa;
+  border-radius: 9px;
+  padding: 20px;
+}
+
+.sensor-label {
+  display: block;
+  color: #728093;
+  font-size: 13px;
+}
+
+.sensor-value {
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+}
+
+.sensor-unit {
+  color: #8290a0;
+  font-size: 12px;
+}
+
+.updated {
+  text-align: right;
+  margin-top: 20px;
+  color: #8491a0;
+  font-size: 12px;
+}
+
+.warning {
+  color: #a63232;
+  font-size: 13px;
+}
+
+footer {
+  text-align: center;
+  color: #8591a0;
+  font-size: 12px;
+  padding: 20px;
+}
+
+@media (max-width: 650px) {
+  .header {
+    padding: 20px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+    width: calc(100% - 28px);
+    margin: 20px auto;
+  }
+
+  .connection-card,
+  .sensor-section {
+    grid-column: span 1;
+  }
+
+  .sensor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sensor-value {
+    font-size: 26px;
+  }
+}
