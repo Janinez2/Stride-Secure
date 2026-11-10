@@ -177,6 +177,39 @@ button:not(:disabled):hover {
   gap: 12px;
 }
 
+.threshold-form label {
+  display: block;
+  color: #728093;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.threshold-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.threshold-controls input {
+  min-width: 0;
+  width: 140px;
+  border: 1px solid #d5dce5;
+  border-radius: 7px;
+  padding: 11px 12px;
+  color: #202938;
+  font: inherit;
+}
+
+.threshold-controls input:focus {
+  outline: 2px solid #8bb9df;
+  outline-offset: 1px;
+}
+
+.threshold-controls .primary-button {
+  margin-top: 0;
+}
+
 .sensor-section {
   grid-column: span 2;
 }

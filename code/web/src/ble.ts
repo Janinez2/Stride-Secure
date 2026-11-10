@@ -11,12 +11,15 @@ export const COMMAND_UUID =
 export const TELEMETRY_UUID =
   "12345678-1234-5678-1234-56789abcdef2";
 
+export const THRESHOLD_UUID =
+  "12345678-1234-5678-1234-56789abcdef3";
+
 // Sensor data received from Arduino.
 export interface Telemetry {
   distance_cm: number;
   average_cm: number;
   tilt_status: string;
-  over40_count: number;
+  over_count: number;
 }
 
 let device: BluetoothDevice | null = null;
@@ -25,6 +28,10 @@ let commandCharacteristic:
   | null = null;
 
 let telemetryCharacteristic:
+  | BluetoothRemoteGATTCharacteristic
+  | null = null;
+
+let thresholdCharacteristic:
   | BluetoothRemoteGATTCharacteristic
   | null = null;
 
@@ -76,6 +83,9 @@ export async function connectToArduino(
   telemetryCharacteristic =
     await service.getCharacteristic(TELEMETRY_UUID);
 
+  thresholdCharacteristic =
+    await service.getCharacteristic(THRESHOLD_UUID);
+
   // Subscribe to sensor notifications.
   await telemetryCharacteristic.startNotifications();
 
@@ -97,7 +107,7 @@ export async function connectToArduino(
           typeof data.distance_cm !== "number" ||
           typeof data.average_cm !== "number" ||
           typeof data.tilt_status !== "string" ||
-          typeof data.over40_count !== "number"
+          typeof data.over_count !== "number"
         ) {
           throw new Error("Invalid telemetry format.");
         }
@@ -127,6 +137,21 @@ export async function sendCommand(
   );
 }
 
+// Send a distance threshold to Arduino in centimeters.
+export async function sendThreshold(
+  threshold: number
+): Promise<void> {
+  if (!thresholdCharacteristic) {
+    throw new Error("Arduino is not connected.");
+  }
+
+  const encoded = new TextEncoder().encode(String(threshold));
+
+  await thresholdCharacteristic.writeValueWithResponse(
+    encoded
+  );
+}
+
 // Disconnect from Arduino.
 export function disconnectFromArduino(): void {
   if (device?.gatt?.connected) {
@@ -135,5 +160,6 @@ export function disconnectFromArduino(): void {
 
   commandCharacteristic = null;
   telemetryCharacteristic = null;
+  thresholdCharacteristic = null;
   device = null;
 }

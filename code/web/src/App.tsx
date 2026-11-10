@@ -1,11 +1,12 @@
 
 // src/App.tsx
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import {
   connectToArduino,
   disconnectFromArduino,
   sendCommand,
+  sendThreshold,
   isBluetoothSupported,
   type Telemetry,
 } from "./ble";
@@ -27,6 +28,8 @@ function App() {
     useState<string>("--");
 
   const [commandBusy, setCommandBusy] = useState(false);
+  const [thresholdInput, setThresholdInput] = useState("40");
+  const [thresholdBusy, setThresholdBusy] = useState(false);
 
   // Connect to Arduino.
   const handleConnect = async () => {
@@ -93,6 +96,33 @@ function App() {
       );
     } finally {
       setCommandBusy(false);
+    }
+  };
+
+  const handleThresholdSubmit = async (
+    event: FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    const threshold = Number(thresholdInput);
+    if (!Number.isFinite(threshold) || threshold < 0) {
+      setStatus("Enter a valid non-negative threshold.");
+      return;
+    }
+
+    try {
+      setThresholdBusy(true);
+      await sendThreshold(threshold);
+      setStatus(`Distance threshold set to ${threshold} cm`);
+    } catch (error) {
+      console.error(error);
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "Failed to send threshold"
+      );
+    } finally {
+      setThresholdBusy(false);
     }
   };
 
@@ -199,6 +229,46 @@ function App() {
           </div>
         </section>
 
+        {/* Distance Threshold */}
+        <section className="card">
+          <div className="section-heading">
+            <h2>Distance Threshold</h2>
+          </div>
+
+          <p className="description">
+            Set the distance in centimeters at which the device responds.
+          </p>
+
+          <form
+            className="threshold-form"
+            onSubmit={handleThresholdSubmit}
+          >
+            <label htmlFor="distance-threshold">
+              Threshold (cm)
+            </label>
+            <div className="threshold-controls">
+              <input
+                id="distance-threshold"
+                type="number"
+                min="0"
+                step="any"
+                value={thresholdInput}
+                onChange={(event) =>
+                  setThresholdInput(event.target.value)
+                }
+                required
+              />
+              <button
+                className="primary-button"
+                type="submit"
+                disabled={!connected || thresholdBusy}
+              >
+                {thresholdBusy ? "Sending..." : "Set Threshold"}
+              </button>
+            </div>
+          </form>
+        </section>
+
         {/* Sensor Dashboard */}
         <section className="card sensor-section">
           <div className="section-heading">
@@ -247,7 +317,7 @@ function App() {
               </span>
 
               <div className="sensor-value">
-                {telemetry?.over40_count ?? "--"}
+                {telemetry?.over_count ?? "--"}
               </div>
             </div>
 
