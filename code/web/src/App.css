@@ -199,6 +199,7 @@ button:not(:disabled):hover {
   padding: 11px 12px;
   color: #d5dce5;
   font: inherit;
+  background: white;
 }
 
 .threshold-controls input:focus {
