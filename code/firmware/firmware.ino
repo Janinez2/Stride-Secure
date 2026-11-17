@@ -1,5 +1,6 @@
 #include <Arduino_LSM6DS3.h>
 #include <ArduinoBLE.h>
+#include <math.h>
 
 // ----------------------------
 // Pin assignments
@@ -14,7 +15,35 @@ const int ledPin = LED_BUILTIN;
 // IMU initializaiton
 // ----------------------------
 float x, y, z;
-float plusThreshold = 0.5, minusThreshold = -0.5;   //sin(15 degrees) = 0.2588, sin(30 deg) = 0.5
+const float plusThreshold = 0.5;
+const float minusThreshold = -0.5;
+
+const float freeFallThresholdG = 0.5;
+const float impactThresholdG = 2.5;
+const float rotationThresholdDps = 180.0;
+const float fallTiltThresholdDegrees = 45.0;
+const unsigned long fallSequenceWindowMs = 1200;
+const unsigned long rotationWindowMs = 700;
+const unsigned long fallAlertDurationMs = 5000;
+
+unsigned long freeFallStartedAt = 0;
+unsigned long highRotationAt = 0;
+unsigned long fallDetectedUntil = 0;
+bool freeFallInProgress = false;
+bool highRotationRecently = false;
+bool hasAccelerationSample = false;
+
+float latestDistanceCm = -1.0;
+bool newDistanceReading = false;
+bool distanceTriggerHigh = false;
+bool waitingForEcho = false;
+bool echoPulseStarted = false;
+unsigned long lastDistanceTriggerMs = 0;
+unsigned long echoWaitStartedAtUs = 0;
+unsigned long echoPulseStartedAtUs = 0;
+unsigned long distanceLedLastToggle = 0;
+unsigned long tiltAlertUntil = 0;
+bool distanceLedOn = false;
 
 // ----------------------------
 // BLE UUIDs
@@ -45,7 +74,7 @@ BLEStringCharacteristic commandCharacteristic(
 BLEStringCharacteristic telemetryCharacteristic(
     TELEMETRY_UUID,
     BLENotify,
-    128
+    160
 );
 
 BLEStringCharacteristic thresholdCharacteristic(
@@ -61,62 +90,82 @@ unsigned long lastTelemetryTime = 0;
 float distanceSumCm = 0.0;
 unsigned long distanceSampleCount = 0;
 unsigned long distanceOverCount = 0;
-float distancestd = 0;
-float threshold = 40;
+float distanceThreshold = 40;
 
 // ----------------------------
 // Sensor readings
 // ----------------------------
-float proxData(){
-  // Send an ultrasonic pulse.
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
+void finishDistanceMeasurement(float distance) {
+  latestDistanceCm = distance;
+  newDistanceReading = distance >= 0.0;
+  waitingForEcho = false;
+  echoPulseStarted = false;
 
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
-  // Measure the echo duration.
-  long duration = pulseIn(echoPin, HIGH);
-
-  if (duration == 0) {
-    Serial.println("No object detected");
-  } else {
-    // Speed of sound: approximately 0.0343 cm/us.
-    float distance = duration * 0.0343 / 2.0;
-
-    if (distance > threshold) {  //anything greater than 40cm makes led flash
-      int rate = map((int)distance, 40, 200, 500, 10);  // from range of 40cm-200cm, respectively flash at a rate of 500ms-10ms intervals
-      rate = constrain(rate, 10, 500);
-
-      digitalWrite(distPin, LOW);
-      delay(rate);
-      digitalWrite(distPin, HIGH);
-      delay(rate);
-      digitalWrite(distPin, LOW);
-    }
-
+  if (distance >= 0.0) {
     Serial.print("Distance: ");
     Serial.print(distance);
     Serial.println(" cm");
-    return distance;
+  } else {
+    Serial.println("No object detected");
+  }
+}
+
+void updateDistanceSensor() {
+  const unsigned long nowMs = millis();
+  const unsigned long nowUs = micros();
+
+  if (distanceTriggerHigh) {
+    if (nowUs - echoWaitStartedAtUs >= 10) {
+      digitalWrite(trigPin, LOW);
+      distanceTriggerHigh = false;
+      waitingForEcho = true;
+      echoWaitStartedAtUs = nowUs;
+    }
+    return;
   }
 
-  return -1.0;
+  if (waitingForEcho) {
+    if (!echoPulseStarted && digitalRead(echoPin) == HIGH) {
+      echoPulseStartedAtUs = nowUs;
+      echoPulseStarted = true;
+    } else if (echoPulseStarted && digitalRead(echoPin) == LOW) {
+      const unsigned long durationUs = nowUs - echoPulseStartedAtUs;
+      finishDistanceMeasurement(durationUs * 0.0343 / 2.0);
+    } else if (nowUs - echoWaitStartedAtUs >= 25000UL) {
+      finishDistanceMeasurement(-1.0);
+    }
+    return;
+  }
+
+  if (nowMs - lastDistanceTriggerMs >= 500) {
+    lastDistanceTriggerMs = nowMs;
+    digitalWrite(trigPin, HIGH);
+    echoWaitStartedAtUs = nowUs;
+    distanceTriggerHigh = true;
+  }
+}
+
+void updateDistanceIndicator() {
+  const unsigned long now = millis();
+  if (latestDistanceCm <= distanceThreshold) {
+    distanceLedOn = false;
+    digitalWrite(distPin, LOW);
+    return;
+  }
+
+  int rate = map((int)latestDistanceCm, 40, 200, 500, 10);
+  rate = constrain(rate, 10, 500);
+  if (now - distanceLedLastToggle >= (unsigned long)rate) {
+    distanceLedLastToggle = now;
+    distanceLedOn = !distanceLedOn;
+    digitalWrite(distPin, distanceLedOn ? HIGH : LOW);
+  }
 }
 
 const char* imuData(){
-  if (!IMU.accelerationAvailable()) {
+  if (!hasAccelerationSample) {
     return "No IMU data";
   }
-
-  IMU.readAcceleration(x, y, z);
-  // Serial.print("X = ");
-  // Serial.print(x);
-  // Serial.print(", Y = ");
-  // Serial.print(y);
-  // Serial.print(", Z = ");
-  // Serial.println(z);
 
   const char* status = "Level";
   if (y > plusThreshold) {
@@ -133,11 +182,80 @@ const char* imuData(){
       x < minusThreshold || x > plusThreshold) {
     Serial.println(status);
     digitalWrite(tiltPin, HIGH);
-    delay(10);
-    digitalWrite(tiltPin, LOW);
+    tiltAlertUntil = millis() + 10;
   }
 
   return status;
+}
+
+float calculateTiltDegrees() {
+  if (!hasAccelerationSample) {
+    return -1.0f;
+  }
+
+  return atan2f(
+    sqrtf(x * x + y * y),
+    fabsf(z)
+  ) * 180.0f / PI;
+}
+
+bool fallDetect() {
+  const unsigned long now = millis();
+
+  if (IMU.gyroscopeAvailable()) {
+    float gyroX, gyroY, gyroZ;
+    IMU.readGyroscope(gyroX, gyroY, gyroZ);
+    const float rotationMagnitude = sqrtf(
+      gyroX * gyroX + gyroY * gyroY + gyroZ * gyroZ
+    );
+    if (rotationMagnitude >= rotationThresholdDps) {
+      highRotationAt = now;
+      highRotationRecently = true;
+    }
+  }
+
+  if (IMU.accelerationAvailable()) {
+    IMU.readAcceleration(x, y, z);
+    hasAccelerationSample = true;
+
+    const float accelerationMagnitude = sqrtf(x * x + y * y + z * z);
+    if (calculateTiltDegrees() > fallTiltThresholdDegrees) {
+      fallDetectedUntil = now + fallAlertDurationMs;
+      freeFallInProgress = false;
+    } else if (accelerationMagnitude < freeFallThresholdG) {
+      if (!freeFallInProgress) {
+        freeFallStartedAt = now;
+        freeFallInProgress = true;
+      }
+    } else if (
+      accelerationMagnitude >= impactThresholdG &&
+      ((freeFallInProgress &&
+        now - freeFallStartedAt <= fallSequenceWindowMs) ||
+       (highRotationRecently &&
+        now - highRotationAt <= rotationWindowMs))
+    ) {
+      fallDetectedUntil = now + fallAlertDurationMs;
+      freeFallInProgress = false;
+    }
+  }
+
+  if (freeFallInProgress &&
+      now - freeFallStartedAt > fallSequenceWindowMs) {
+    freeFallInProgress = false;
+  }
+  if (highRotationRecently &&
+      now - highRotationAt > rotationWindowMs) {
+    highRotationRecently = false;
+  }
+
+  return (long)(fallDetectedUntil - now) > 0;
+}
+
+void updateTiltIndicator() {
+  if (tiltAlertUntil != 0 && millis() >= tiltAlertUntil) {
+    digitalWrite(tiltPin, LOW);
+    tiltAlertUntil = 0;
+  }
 }
 
 // ----------------------------
@@ -160,10 +278,10 @@ void handleCommand(String command) {
     }
 }
 
-void setThreshold(String value){
+void setDistanceThreshold(String value){
   if (value.length() == 0){ return;}
 
-  threshold = value.toFloat();
+  distanceThreshold = value.toFloat();
 }
 
 // ----------------------------
@@ -210,7 +328,7 @@ void setup() {
 
     //initializes telemetry data to be unavailable at first before connecting with device
     telemetryCharacteristic.writeValue(
-        "{\"distance_cm\":-1,\"average_cm\":-1,\"tilt_status\":\"No IMU data\",\"over_count\":0}"
+        "{\"distance_cm\":-1,\"average_cm\":-1,\"tilt_degrees\":-1,\"tilt_status\":\"No IMU data\",\"over_count\":0,\"fall_detected\":false}"
     );
 
     BLE.advertise();
@@ -225,6 +343,10 @@ void setup() {
 
 void loop() {
   BLE.poll();
+  const bool fallDetected = fallDetect();
+  updateDistanceSensor();
+  updateDistanceIndicator();
+  updateTiltIndicator();
 
   // Check for commands from the mobile app
   if (commandCharacteristic.written()) {
@@ -235,50 +357,46 @@ void loop() {
   // Check for threshold adjustments from the mobile app
   if (thresholdCharacteristic.written()){
     String value = thresholdCharacteristic.value();
-    setThreshold(value);
+    setDistanceThreshold(value);
   }
 
   // Send sensor data every 500 ms
   if (millis() - lastTelemetryTime >= 500) {
-    lastTelemetryTime = millis();
+  lastTelemetryTime = millis();
 
-    const char* tiltStatus = imuData();
-    float distance = proxData();
+  const char* tiltStatus = imuData();
+  const float distance = latestDistanceCm;
 
-    if (distance >= 0.0) {
-      distanceSumCm += distance;
-      distanceSampleCount++;
+  if (newDistanceReading) {
+    distanceSumCm += latestDistanceCm;
+    distanceSampleCount++;
 
-      if (distance > 40.0) {
-        distanceOverCount++;
-      }
-
-    //   Serial.print("Average distance: ");
-    //   Serial.print(distanceSumCm / distanceSampleCount);
-    //   Serial.print(" cm | Readings: ");
-    //   Serial.print(distanceSampleCount);
-    //   Serial.print(" | Over 40 cm: ");
-    //   Serial.println(distanceOver40Count);
+    if (latestDistanceCm > distanceThreshold) {
+      distanceOverCount++;
+    }
+    newDistanceReading = false;
   }
 
   double averageDistanceCm = distanceSampleCount > 0
     ? distanceSumCm / distanceSampleCount
     : -1.0;
+  const float tiltDegrees = calculateTiltDegrees();
 
-  char payload[128];
+  char payload[160];
 
   snprintf(
     payload,
     sizeof(payload),
-    "{\"distance_cm\":%.1f,\"average_cm\":%.1f,\"tilt_status\":\"%s\",\"over_count\":%lu}",
+    "{\"distance_cm\":%.1f,\"average_cm\":%.1f,\"tilt_degrees\":%.1f,\"tilt_status\":\"%s\",\"over_count\":%lu,\"fall_detected\":%s}",
     distance,
     averageDistanceCm,
+    tiltDegrees,
     tiltStatus,
-    distanceOverCount
+    distanceOverCount,
+    fallDetected ? "true" : "false"
   );
 
-    telemetryCharacteristic.writeValue(payload);
+  telemetryCharacteristic.writeValue(payload);
 
-    // Serial.println(payload);
   }
 }

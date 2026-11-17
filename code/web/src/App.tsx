@@ -24,6 +24,9 @@ function App() {
   const [telemetry, setTelemetry] =
     useState<Telemetry | null>(null);
 
+  const [telemetryHistory, setTelemetryHistory] =
+    useState<Array<Telemetry & { receivedAt: string }>>([]);
+
   const [lastUpdated, setLastUpdated] =
     useState<string>("--");
 
@@ -40,6 +43,10 @@ function App() {
       const name = await connectToArduino(
         (data) => {
           setTelemetry(data);
+          setTelemetryHistory((history) => [
+            ...history,
+            { ...data, receivedAt: new Date().toISOString() },
+          ]);
           setLastUpdated(
             new Date().toLocaleTimeString()
           );
@@ -128,6 +135,46 @@ function App() {
 
   const distance = telemetry?.distance_cm;
   const averageDistance = telemetry?.average_cm;
+
+  const handleExportCsv = () => {
+    const columns = [
+      "received_at",
+      "distance_cm",
+      "average_cm",
+      "tilt_degrees",
+      "tilt_status",
+      "over_count",
+      "fall_detected",
+    ];
+    const escapeCsvValue = (value: string | number | boolean) =>
+      `"${String(value).replace(/"/g, '""')}"`;
+    const rows = telemetryHistory.map((record) => [
+      record.receivedAt,
+      record.distance_cm,
+      record.average_cm,
+      record.tilt_degrees,
+      record.tilt_status,
+      record.over_count,
+      record.fall_detected ?? "",
+    ]);
+    const csv = [
+      columns.map(escapeCsvValue).join(","),
+      ...rows.map((row) => row.map(escapeCsvValue).join(",")),
+    ].join("\r\n");
+    const blob = new Blob(["\uFEFF", csv], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `stride-secure-telemetry-${new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
 
   return (
     <div className="app">
@@ -313,11 +360,47 @@ function App() {
 
             <div className="sensor-card">
               <span className="sensor-label">
+                Tilt Degrees
+              </span>
+
+              <div className="sensor-value">
+                {telemetry?.tilt_degrees === undefined
+                  ? "--"
+                  : telemetry.tilt_degrees < 0
+                  ? "N/A"
+                  : telemetry.tilt_degrees.toFixed(1)}
+              </div>
+
+              <span className="sensor-unit">degrees</span>
+            </div>
+
+            <div className="sensor-card">
+              <span className="sensor-label">
                 Distance Past Threshold Count
               </span>
 
               <div className="sensor-value">
                 {telemetry?.over_count ?? "--"}
+              </div>
+            </div>
+
+            <div className="sensor-card">
+              <span className="sensor-label">
+                Fall Detection
+              </span>
+
+              <div
+                className={`sensor-value ${
+                  telemetry?.fall_detected
+                    ? "fall-detected"
+                    : "fall-clear"
+                }`}
+              >
+                {telemetry?.fall_detected === undefined
+                  ? "--"
+                  : telemetry.fall_detected
+                  ? "Possible fall"
+                  : "No alert"}
               </div>
             </div>
 
@@ -335,6 +418,14 @@ function App() {
           <div className="updated">
             Last updated: {lastUpdated}
           </div>
+
+          <button
+            className="secondary-button"
+            onClick={handleExportCsv}
+            disabled={telemetryHistory.length === 0}
+          >
+            Export CSV ({telemetryHistory.length} records)
+          </button>
         </section>
       </main>
 

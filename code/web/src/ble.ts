@@ -18,8 +18,10 @@ export const THRESHOLD_UUID =
 export interface Telemetry {
   distance_cm: number;
   average_cm: number;
+  tilt_degrees: number;
   tilt_status: string;
   over_count: number;
+  fall_detected?: boolean;
 }
 
 let device: BluetoothDevice | null = null;
@@ -106,8 +108,11 @@ export async function connectToArduino(
         if (
           typeof data.distance_cm !== "number" ||
           typeof data.average_cm !== "number" ||
+          typeof data.tilt_degrees !== "number" ||
           typeof data.tilt_status !== "string" ||
-          typeof data.over_count !== "number"
+          typeof data.over_count !== "number" ||
+          (data.fall_detected !== undefined &&
+            typeof data.fall_detected !== "boolean")
         ) {
           throw new Error("Invalid telemetry format.");
         }

@@ -25,3 +25,13 @@ Work Done: Migrated code from Arduino IDE to function on VScode with the arduino
 Objective: Read data from IMU and Proximity sensor, and transmit data to mobile app.
 
 Work Done: Soldered Arduino Nano 33 IoT dev board and started reading data from the IMU and proximity sensor. To set the threshold for tilt angle, the threshold is decided in degrees as sin(30 deg) = 0.5 to get the acceleration threshold 
+
+## Nov 9th:
+Objective: Add threshold setting and fall detection
+
+Work Done:
+
+## Nov 17th
+Objective: data validation and analytics updates
+
+Work Done: added csv export function, tested imu data for fall detection function. 

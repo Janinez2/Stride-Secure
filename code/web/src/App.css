@@ -1,6 +1,34 @@
 
 /* src/App.css */
 
+:root {
+  --page-bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-muted: #f5f7fa;
+  --border: #edf0f3;
+  --input-border: #d5dce5;
+  --text: #202938;
+  --text-secondary: #738092;
+  --text-muted: #8491a0;
+  --heading: #28557f;
+  --header: #142b45;
+  --header-muted: #bdcbd9;
+  --primary: #24649c;
+  --on-primary: #ffffff;
+  --secondary-bg: #e8eef5;
+  --secondary-text: #244563;
+  --soft-blue-bg: #e7eff8;
+  --focus: #8bb9df;
+  --success: #168653;
+  --success-bg: #e3f7ed;
+  --online: #38c98b;
+  --danger: #a63232;
+  --danger-bg: #fceaea;
+  --offline: #e58b8b;
+  --neutral: #999999;
+  --shadow: rgba(20, 43, 69, 0.06);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -8,8 +36,8 @@
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
-  background: #f3f5f8;
-  color: #202938;
+  background: var(--page-bg);
+  color: var(--text);
 }
 
 button {
@@ -23,8 +51,8 @@ button {
 }
 
 .header {
-  background: #142b45;
-  color: white;
+  background: var(--header);
+  color: var(--on-primary);
   padding: 25px 7%;
   display: flex;
   justify-content: space-between;
@@ -40,7 +68,7 @@ button {
 
 .header p {
   margin: 6px 0 0;
-  color: #bdcbd9;
+  color: var(--header-muted);
   font-size: 14px;
 }
 
@@ -55,15 +83,15 @@ button {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #999;
+  background: var(--neutral);
 }
 
 .online .status-dot {
-  background: #38c98b;
+  background: var(--online);
 }
 
 .offline .status-dot {
-  background: #e58b8b;
+  background: var(--offline);
 }
 
 .dashboard {
@@ -76,10 +104,10 @@ button {
 }
 
 .card {
-  background: white;
+  background: var(--surface);
   border-radius: 12px;
   padding: 25px;
-  box-shadow: 0 3px 12px rgba(20, 43, 69, 0.06);
+  box-shadow: 0 3px 12px var(--shadow);
 }
 
 .connection-card {
@@ -92,24 +120,24 @@ button {
   align-items: center;
   gap: 15px;
   margin-bottom: 12px;
-  color: #28557f;
+  color: var(--heading);
 }
 
 .section-heading h2 {
   margin: 0;
   font-size: 19px;
-  color: #28557f;
+  color: var(--heading);
 }
 
 .description {
-  color: #738092;
+  color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.5;
 }
 
 .device-icon {
-  background: #e7eff8;
-  color: #28557f;
+  background: var(--soft-blue-bg);
+  color: var(--heading);
   font-weight: bold;
   padding: 8px 12px;
   border-radius: 6px;
@@ -121,12 +149,12 @@ button {
   justify-content: space-between;
   gap: 15px;
   padding: 13px 0;
-  border-bottom: 1px solid #edf0f3;
+  border-bottom: 1px solid var(--border);
   font-size: 14px;
 }
 
 .label {
-  color: #788596;
+  color: var(--text-secondary);
 }
 
 .device-info strong {
@@ -154,20 +182,20 @@ button:not(:disabled):hover {
 }
 
 .primary-button {
-  background: #24649c;
-  color: white;
+  background: var(--primary);
+  color: var(--on-primary);
   margin-top: 18px;
 }
 
 .secondary-button {
-  background: #e8eef5;
-  color: #244563;
+  background: var(--secondary-bg);
+  color: var(--secondary-text);
   margin-top: 18px;
 }
 
 .disconnect-button {
-  background: #fceaea;
-  color: #a63232;
+  background: var(--danger-bg);
+  color: var(--danger);
   margin-top: 18px;
 }
 
@@ -179,7 +207,7 @@ button:not(:disabled):hover {
 
 .threshold-form label {
   display: block;
-  color: #728093;
+  color: var(--text-secondary);
   font-size: 13px;
   margin-bottom: 8px;
 }
@@ -194,16 +222,16 @@ button:not(:disabled):hover {
 .threshold-controls input {
   min-width: 0;
   width: 140px;
-  border: 1px solid #d5dce5;
+  border: 1px solid var(--input-border);
   border-radius: 7px;
   padding: 11px 12px;
-  color: #d5dce5;
+  color: var(--text);
   font: inherit;
-  background: white;
+  background: var(--surface);
 }
 
 .threshold-controls input:focus {
-  outline: 2px solid #8bb9df;
+  outline: 2px solid var(--focus);
   outline-offset: 1px;
 }
 
@@ -216,8 +244,8 @@ button:not(:disabled):hover {
 }
 
 .live-label {
-  background: #e3f7ed;
-  color: #168653;
+  background: var(--success-bg);
+  color: var(--success);
   padding: 6px 10px;
   border-radius: 5px;
   font-size: 11px;
@@ -232,7 +260,7 @@ button:not(:disabled):hover {
 }
 
 .sensor-card {
-  background: #f5f7fa;
+  background: var(--surface-muted);
   border-radius: 9px;
   padding: 20px;
 }
@@ -243,7 +271,7 @@ button:not(:disabled):hover {
 
 .sensor-label {
   display: block;
-  color: #728093;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
@@ -254,26 +282,34 @@ button:not(:disabled):hover {
   overflow-wrap: anywhere;
 }
 
+.fall-detected {
+  color: var(--danger);
+}
+
+.fall-clear {
+  color: var(--success);
+}
+
 .sensor-unit {
-  color: #8290a0;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 
 .updated {
   text-align: right;
   margin-top: 20px;
-  color: #8491a0;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
 .warning {
-  color: #a63232;
+  color: var(--danger);
   font-size: 13px;
 }
 
 footer {
   text-align: center;
-  color: #8591a0;
+  color: var(--text-muted);
   font-size: 12px;
   padding: 20px;
 }
